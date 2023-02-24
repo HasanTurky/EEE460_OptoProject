@@ -10,7 +10,7 @@ lambda = data(:,1);
 lambda = lambda';
 img = imread('test2.jpg');
 [p, I] = getxy(img);
-
+flag = 0;
 for i = 1:height(p)
     tx = p(i,1);
     ty = p(i,2);
@@ -39,34 +39,45 @@ for i = 1:height(p)
         intersect(:,2) = InterX([a;value],[x(1), x(end);y(1), y(end)]);
         Y = [intersect(:,2)';tx ,ty];
         distance2 = pdist(Y,'euclidean');
+        if(distance2<distance1)
+            flag = 1;
+            distance2 = 1e6;
+        end
     end
     if distance1<distance2
-        distance = distance1
-        dominant_point = intersect(:,1)'
+        distance = distance1;
+        dominant_point = intersect(:,1)';
     else
-        distance = distance2
-        dominant_point = intersect(:,2)'
+        distance = distance2;
+        dominant_point = intersect(:,2)';
     end
     %% finding points of interest
     ad = pdist2([x y],dominant_point);
-    ad_homino = ad;
-    [mdis, index] = min(ad);
-    ad_homino(index) = [];
-    mdis2 = min(ad_homino);
-    index2 = find(ad==mdis2);
-
-
+    [ad,idx] = sort(ad,'ascend');
+%     [mdis index] = [ad_homino(1) idx(1)];
+%     [mdis2 index2] = [ad_homino(2) idx(2)];
     %% finding wavelength
-    xval = [x(index) x(index2)];
-    wL = [lambda(index) lambda(index2)];
+%     xval = [x(idx(1)) x(idx(2))];
+%     wL = [lambda(idx(1)) lambda(idx(2))];
     % ataloss = polyfit(xval,wL,1);
     % Wavelength = polyval(ataloss,dominant_point(1));
-    wavelength(i) = interp1(xval,wL,dominant_point(1));
+    wavelength(i) = lambda(idx(1));
+    if(flag & ty<.33)
+        wavelength(i) = -wavelength(i);
+        flag = 0;
+%         p(i,:)
+    end
 %     scatter(wavelength,I(i));
     hold on
 end
+
+%% 
+for j = 1:length(wavelength)
+
+end
 %% 
 stem(wavelength,I);
+xlim([360 780]);
 % [wavelength,idx] =  sort(wavelength,'ascend');
 % I = I(idx);
 % plot(wavelength,I);
